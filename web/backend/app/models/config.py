@@ -45,3 +45,7 @@ class FullConfig(BaseModel):
     push: PushConfig
     keywords: KeywordsConfig
     weights: WeightsConfig
+
+
+class ConfigUpdateRequest(BaseModel):
+    yaml_content: str
