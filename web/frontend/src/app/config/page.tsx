@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { ConfigData, SchedulerStatus } from "@/lib/types";
 
@@ -14,6 +14,8 @@ export default function ConfigPage() {
   const [rawYaml, setRawYaml] = useState("");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [schedulerLastUpdated, setSchedulerLastUpdated] = useState<Date | null>(null);
+  const schedulerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadConfig = useCallback(async () => {
     try {
@@ -28,9 +30,21 @@ export default function ConfigPage() {
     }
   }, []);
 
+  const refreshScheduler = useCallback(async () => {
+    const res = await api.config.scheduler();
+    if (res.success && res.data) {
+      setScheduler(res.data as SchedulerStatus);
+      setSchedulerLastUpdated(new Date());
+    }
+  }, []);
+
   useEffect(() => {
     loadConfig();
-  }, [loadConfig]);
+    schedulerIntervalRef.current = setInterval(refreshScheduler, 30_000);
+    return () => {
+      if (schedulerIntervalRef.current) clearInterval(schedulerIntervalRef.current);
+    };
+  }, [loadConfig, refreshScheduler]);
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -145,7 +159,14 @@ export default function ConfigPage() {
 
           {/* 调度状态 */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="font-semibold mb-3">调度状态</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold">调度状态</h2>
+              {schedulerLastUpdated && (
+                <span className="text-xs text-gray-400">
+                  {schedulerLastUpdated.toLocaleTimeString("zh-CN")}
+                </span>
+              )}
+            </div>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between"><dt className="text-gray-500">当前时段</dt><dd>{scheduler?.period_name || "无"}</dd></div>
               <div className="flex justify-between"><dt className="text-gray-500">日计划</dt><dd>{scheduler?.day_plan || "无"}</dd></div>
