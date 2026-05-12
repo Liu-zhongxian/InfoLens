@@ -40,6 +40,7 @@ export default function RootLayout({
             <a href="/search" className="hover:text-indigo-600 transition-colors">搜索</a>
             <a href="/analytics" className="hover:text-indigo-600 transition-colors">分析</a>
             <a href="/notifications" className="hover:text-indigo-600 transition-colors">通知</a>
+            <a href="/scheduler" className="hover:text-indigo-600 transition-colors">调度</a>
             <a href="/config" className="hover:text-indigo-600 transition-colors">配置</a>
           </div>
         </nav>
