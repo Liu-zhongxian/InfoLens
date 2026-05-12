@@ -72,6 +72,12 @@ export const api = {
   config: {
     get: (section?: string) =>
       fetchApi(`/api/config?section=${section || "all"}`),
+    raw: () => fetchApi("/api/config/raw"),
+    update: (yamlContent: string) =>
+      fetchApi("/api/config", {
+        method: "PUT",
+        body: JSON.stringify({ yaml_content: yamlContent }),
+      }),
     scheduler: () => fetchApi("/api/config/scheduler"),
   },
   rss: {
