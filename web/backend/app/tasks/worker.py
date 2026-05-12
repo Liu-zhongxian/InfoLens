@@ -1,5 +1,35 @@
 import asyncio
+import logging
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
+
+
+async def run_scheduler_tick(task_manager=None) -> dict:
+    """Run one scheduler resolution cycle. Enqueues crawl if scheduled."""
+    def _resolve():
+        from trendradar.core.loader import load_config
+        from trendradar.context import AppContext
+        config = load_config()
+        ctx = AppContext(config)
+        scheduler = ctx.create_scheduler()
+        return scheduler.resolve()
+
+    schedule = await asyncio.to_thread(_resolve)
+    result = {
+        "period_key": schedule.period_key,
+        "period_name": schedule.period_name,
+        "collect": schedule.collect,
+        "analyze": schedule.analyze,
+        "push": schedule.push,
+    }
+
+    if schedule.collect and task_manager:
+        task_id = task_manager.submit("crawl", run_crawl())
+        result["enqueued_task"] = task_id
+        logger.info("Auto-scheduler: enqueued crawl task %s", task_id)
+
+    return result
 
 
 async def run_crawl(
